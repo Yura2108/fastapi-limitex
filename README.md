@@ -221,7 +221,7 @@ from app.routers import items
 
 app = FastAPI()
 limiter = Limiter()
-limiter.attach(app)              # makes the limiter discoverable to @limit
+limiter.attach(app)  # makes the limiter discoverable to @limit
 app.include_router(items.router)
 ```
 
