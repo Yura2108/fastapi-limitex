@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from starlette.testclient import TestClient
 
-from fastapi_limiterx import Limiter, get_ip_from_header, global_key, user_key
+from fastapi_limitex import Limiter, get_ip_from_header, global_key, user_key
 
 
 def extract_user(request: Request) -> str | None:

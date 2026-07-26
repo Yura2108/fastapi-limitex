@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from fastapi_limiterx.backends.base import BaseStorage
-from fastapi_limiterx.rate import parse
-from fastapi_limiterx.strategies import create_strategy
+from fastapi_limitex.backends.base import BaseStorage
+from fastapi_limitex.rate import parse
+from fastapi_limitex.strategies import create_strategy
 
 
 @pytest.mark.parametrize("strategy_name", ["fixed_window", "sliding_window", "moving_window"])

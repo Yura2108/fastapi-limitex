@@ -5,11 +5,11 @@ import itertools
 from starlette.requests import Request
 from starlette.websockets import WebSocket
 
-from fastapi_limiterx.errors import ConfigurationError, RateLimitExceeded
-from fastapi_limiterx.limiter import Limiter
-from fastapi_limiterx.rate import RateLimitItem, StaticLimit, parse_many
-from fastapi_limiterx.registry import LimitRule, LimitValue
-from fastapi_limiterx.types import CostFunc, ExemptFunc, KeyFunc
+from fastapi_limitex.errors import ConfigurationError, RateLimitExceeded
+from fastapi_limitex.limiter import Limiter
+from fastapi_limitex.rate import RateLimitItem, StaticLimit, parse_many
+from fastapi_limitex.registry import LimitRule, LimitValue
+from fastapi_limitex.types import CostFunc, ExemptFunc, KeyFunc
 
 _counter = itertools.count()
 
@@ -92,7 +92,7 @@ class WebSocketRateLimiter:
 
     Call the instance inside your receive loop, optionally passing a
     ``context_key`` to distinguish message types. On breach it raises
-    :class:`~fastapi_limiterx.errors.RateLimitExceeded`, which you can catch to
+    :class:`~fastapi_limitex.errors.RateLimitExceeded`, which you can catch to
     send an error frame or close the connection.
 
     Args:

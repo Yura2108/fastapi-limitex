@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from fastapi_limiterx.backends.base import BaseStorage
-from fastapi_limiterx.errors import ConfigurationError
-from fastapi_limiterx.strategies.base import HitResult, RateLimitStrategy, WindowStats
-from fastapi_limiterx.strategies.fixed_window import FixedWindowStrategy
-from fastapi_limiterx.strategies.moving_window import MovingWindowStrategy
-from fastapi_limiterx.strategies.sliding_window import SlidingWindowStrategy
-from fastapi_limiterx.strategies.token_bucket import TokenBucketStrategy
+from fastapi_limitex.backends.base import BaseStorage
+from fastapi_limitex.errors import ConfigurationError
+from fastapi_limitex.strategies.base import HitResult, RateLimitStrategy, WindowStats
+from fastapi_limitex.strategies.fixed_window import FixedWindowStrategy
+from fastapi_limitex.strategies.moving_window import MovingWindowStrategy
+from fastapi_limitex.strategies.sliding_window import SlidingWindowStrategy
+from fastapi_limitex.strategies.token_bucket import TokenBucketStrategy
 
 __all__ = [
     "FixedWindowStrategy",

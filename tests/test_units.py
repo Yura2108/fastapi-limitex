@@ -4,8 +4,8 @@ import pytest
 from fastapi import FastAPI, Request
 from starlette.testclient import TestClient
 
-import fastapi_limiterx
-from fastapi_limiterx import (
+import fastapi_limitex
+from fastapi_limitex import (
     ConfigurationError,
     EscalationPolicy,
     Exemptions,
@@ -14,15 +14,15 @@ from fastapi_limiterx import (
     get_ip_from_header,
     get_remote_address,
 )
-from fastapi_limiterx import backends as backends_pkg
-from fastapi_limiterx.backends.base import now
-from fastapi_limiterx.backends.memory import MemoryStorage as MemoryStorageImpl
-from fastapi_limiterx.backends.redis import RedisStorage
-from fastapi_limiterx.backends.sqlite import SQLiteStorage
-from fastapi_limiterx.keys import resolve_key
-from fastapi_limiterx.rate import parse
-from fastapi_limiterx.registry import LimitRegistry, LimitRule
-from fastapi_limiterx.strategies import create_strategy
+from fastapi_limitex import backends as backends_pkg
+from fastapi_limitex.backends.base import now
+from fastapi_limitex.backends.memory import MemoryStorage as MemoryStorageImpl
+from fastapi_limitex.backends.redis import RedisStorage
+from fastapi_limitex.backends.sqlite import SQLiteStorage
+from fastapi_limitex.keys import resolve_key
+from fastapi_limitex.rate import parse
+from fastapi_limitex.registry import LimitRegistry, LimitRule
+from fastapi_limitex.strategies import create_strategy
 
 
 def make_request(
@@ -62,11 +62,11 @@ def test_lazy_backend_getattr_error() -> None:
 
 def test_package_getattr_error() -> None:
     with pytest.raises(AttributeError):
-        fastapi_limiterx.__getattr__("DoesNotExist")
+        fastapi_limitex.__getattr__("DoesNotExist")
 
 
 def test_package_lazy_backend() -> None:
-    assert fastapi_limiterx.SQLiteStorage is SQLiteStorage
+    assert fastapi_limitex.SQLiteStorage is SQLiteStorage
 
 
 async def test_async_context_manager() -> None:

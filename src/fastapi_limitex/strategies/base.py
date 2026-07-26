@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar
 
-from fastapi_limiterx.backends.base import BaseStorage, now
-from fastapi_limiterx.rate import RateLimitItem
+from fastapi_limitex.backends.base import BaseStorage, now
+from fastapi_limitex.rate import RateLimitItem
 
 
 @dataclass(frozen=True)
@@ -42,7 +42,7 @@ class HitResult:
 class RateLimitStrategy(ABC):
     """Base class for rate limiting algorithms.
 
-    A strategy translates a :class:`~fastapi_limiterx.rate.RateLimitItem` and a
+    A strategy translates a :class:`~fastapi_limitex.rate.RateLimitItem` and a
     caller-supplied ``key`` into calls against a :class:`BaseStorage` backend.
     """
 

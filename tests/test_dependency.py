@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import Depends, FastAPI
 from starlette.testclient import TestClient
 
-from fastapi_limiterx import Limiter, RateLimiter
+from fastapi_limitex import Limiter, RateLimiter
 
 
 def test_dependency_blocks_after_limit() -> None:

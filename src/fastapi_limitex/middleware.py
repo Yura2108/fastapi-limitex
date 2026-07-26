@@ -5,8 +5,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from fastapi_limiterx.limiter import Limiter
-from fastapi_limiterx.responses import apply_headers
+from fastapi_limitex.limiter import Limiter
+from fastapi_limitex.responses import apply_headers
 
 
 class RateLimiterMiddleware(BaseHTTPMiddleware):
@@ -28,7 +28,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             if blocked is not None:
                 return blocked
         response = await call_next(request)
-        stats = getattr(request.state, "limiterx_stats", None)
+        stats = getattr(request.state, "limitex_stats", None)
         if stats is not None:
             apply_headers(response, stats, self.limiter.header_config)
         return response

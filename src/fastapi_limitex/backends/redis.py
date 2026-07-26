@@ -3,8 +3,8 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from fastapi_limiterx.backends.base import BaseStorage, TokenBucketState, now
-from fastapi_limiterx.errors import BackendNotInstalledError
+from fastapi_limitex.backends.base import BaseStorage, TokenBucketState, now
+from fastapi_limitex.errors import BackendNotInstalledError
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
@@ -79,7 +79,7 @@ class RedisStorage(BaseStorage):
         url: str | None = None,
         *,
         client: Redis | None = None,
-        prefix: str = "limiterx",
+        prefix: str = "limitex",
     ) -> None:
         if url is None and client is None:
             raise ValueError("RedisStorage requires either a url or a client")

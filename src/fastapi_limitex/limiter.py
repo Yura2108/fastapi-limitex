@@ -12,17 +12,17 @@ import anyio
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from fastapi_limiterx.backends.base import BaseStorage, now
-from fastapi_limiterx.backends.memory import MemoryStorage
-from fastapi_limiterx.errors import ConfigurationError, MissingIdentityError, RateLimitExceeded
-from fastapi_limiterx.escalation import EscalationPolicy
-from fastapi_limiterx.exemptions import Exemptions
-from fastapi_limiterx.keys import get_remote_address, resolve_key
-from fastapi_limiterx.rate import RateLimitItem, StaticLimit, parse_many
-from fastapi_limiterx.registry import LimitRegistry, LimitRule, LimitValue
-from fastapi_limiterx.responses import HeaderConfig, apply_headers, default_response
-from fastapi_limiterx.strategies import HitResult, RateLimitStrategy, WindowStats, create_strategy
-from fastapi_limiterx.types import (
+from fastapi_limitex.backends.base import BaseStorage, now
+from fastapi_limitex.backends.memory import MemoryStorage
+from fastapi_limitex.errors import ConfigurationError, MissingIdentityError, RateLimitExceeded
+from fastapi_limitex.escalation import EscalationPolicy
+from fastapi_limitex.exemptions import Exemptions
+from fastapi_limitex.keys import get_remote_address, resolve_key
+from fastapi_limitex.rate import RateLimitItem, StaticLimit, parse_many
+from fastapi_limitex.registry import LimitRegistry, LimitRule, LimitValue
+from fastapi_limitex.responses import HeaderConfig, apply_headers, default_response
+from fastapi_limitex.strategies import HitResult, RateLimitStrategy, WindowStats, create_strategy
+from fastapi_limitex.types import (
     BreachCallback,
     CostFunc,
     ExemptFunc,
@@ -84,6 +84,7 @@ class Limiter:
         self._response_builder = response_builder
         self._enabled = enabled
         self._registry = LimitRegistry()
+        self._registered_ids: set[int] = set()
         self._strategies: dict[str, RateLimitStrategy] = {}
         self._application_items = parse_many(application_limits) if application_limits else []
         self._default_items = parse_many(default_limits) if default_limits else []
@@ -100,15 +101,15 @@ class Limiter:
         if scheme in ("", "memory"):
             return MemoryStorage()
         if scheme in ("redis", "rediss", "unix"):
-            from fastapi_limiterx.backends.redis import RedisStorage
+            from fastapi_limitex.backends.redis import RedisStorage
 
             return RedisStorage(uri)
         if scheme == "memcached":
-            from fastapi_limiterx.backends.memcached import MemcachedStorage
+            from fastapi_limitex.backends.memcached import MemcachedStorage
 
             return MemcachedStorage(parts.hostname or "localhost", parts.port or 11211)
         if scheme == "sqlite":
-            from fastapi_limiterx.backends.sqlite import SQLiteStorage
+            from fastapi_limitex.backends.sqlite import SQLiteStorage
 
             path = parts.path.lstrip("/") or ":memory:"
             return SQLiteStorage(path)
@@ -179,7 +180,7 @@ class Limiter:
         Registers exception handlers for blocked requests and installs the
         middleware that enforces global limits and injects headers.
         """
-        from fastapi_limiterx.middleware import RateLimiterMiddleware
+        from fastapi_limitex.middleware import RateLimiterMiddleware
 
         app.state.limiter = self
         if register_handlers:
@@ -210,49 +211,37 @@ class Limiter:
         """
 
         def decorator(func: F) -> F:
-            rule_name = name or f"{func.__module__}.{func.__qualname__}"
-            rule = LimitRule(
-                name=rule_name,
-                limit=limit_value,
+            rule = _build_rule(
+                name or f"{func.__module__}.{func.__qualname__}",
+                limit_value,
                 key_func=key_func,
                 strategy=strategy,
                 cost=cost,
                 burst=burst,
                 exempt_when=exempt_when,
                 per_method=per_method,
-                methods=frozenset(m.upper() for m in methods) if methods else None,
+                methods=methods,
                 scope=scope,
             )
             self._registry.add(rule)
-            request_param = _locate_request_param(func)
-
-            if inspect.iscoroutinefunction(func):
-
-                @wraps(func)
-                async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-                    request = _extract_request(args, kwargs, request_param)
-                    blocked = await self.guard(request, [rule])
-                    if blocked is not None:
-                        return blocked
-                    result = await func(*args, **kwargs)
-                    self._inject_success(request, result)
-                    return result
-
-                return cast(F, async_wrapper)
-
-            @wraps(func)
-            def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-                request = _extract_request(args, kwargs, request_param)
-                blocked = anyio.from_thread.run(self.guard, request, [rule])
-                if blocked is not None:
-                    return blocked
-                result = func(*args, **kwargs)
-                self._inject_success(request, result)
-                return result
-
-            return cast(F, sync_wrapper)
+            self._registered_ids.add(id(rule))
+            return _build_endpoint_wrapper(func, rule, lambda _request: self)
 
         return decorator
+
+    def register_rule(self, rule: LimitRule) -> None:
+        """Register ``rule`` for runtime management the first time it is seen.
+
+        Called by the module-level :func:`limit` decorator on first use so that
+        limits defined in router modules (without importing this limiter) still
+        support runtime editing by name. Rules removed via :meth:`remove_limit`
+        are not re-registered.
+        """
+        if id(rule) in self._registered_ids:
+            return
+        self._registered_ids.add(id(rule))
+        if all(existing is not rule for existing in self._registry.get(rule.name)):
+            self._registry.add(rule)
 
     async def enforce(self, request: Request, rules: list[LimitRule]) -> None:
         """Evaluate ``rules`` for ``request``, raising on the first breach.
@@ -263,7 +252,7 @@ class Limiter:
         await self._ensure_ready()
         stats = await self._apply(request, rules)
         if stats is not None:
-            request.state.limiterx_stats = stats
+            request.state.limitex_stats = stats
 
     async def check(
         self,
@@ -278,7 +267,7 @@ class Limiter:
         """Consume a request for an explicit key outside the request lifecycle.
 
         Useful for WebSocket message loops and background tasks. Returns the
-        :class:`~fastapi_limiterx.strategies.HitResult` for the first blocked
+        :class:`~fastapi_limitex.strategies.HitResult` for the first blocked
         limit, or for the last limit when all are allowed.
         """
         await self._ensure_ready()
@@ -341,8 +330,8 @@ class Limiter:
         except MissingIdentityError as exc:
             return self._missing_identity_response(exc)
         if stats is not None:
-            existing = getattr(request.state, "limiterx_stats", None)
-            request.state.limiterx_stats = self._most_restrictive(existing, stats)
+            existing = getattr(request.state, "limitex_stats", None)
+            request.state.limitex_stats = self._most_restrictive(existing, stats)
         return None
 
     async def _apply(self, request: Request, rules: list[LimitRule]) -> WindowStats | None:
@@ -455,7 +444,7 @@ class Limiter:
 
     def _inject_success(self, request: Request, result: Any) -> None:
         """Attach headers to a returned ``Response`` when limits are known."""
-        stats = getattr(request.state, "limiterx_stats", None)
+        stats = getattr(request.state, "limitex_stats", None)
         if stats is not None and isinstance(result, Response):
             apply_headers(result, stats, self._header_config)
 
@@ -545,3 +534,124 @@ def _extract_request(args: tuple[Any, ...], kwargs: dict[str, Any], name: str) -
         if isinstance(value, Request):
             return value
     raise ConfigurationError("Could not find a Request argument in the endpoint call")
+
+
+def _build_rule(
+    name: str,
+    limit_value: LimitValue,
+    *,
+    key_func: KeyFunc | None,
+    strategy: str | None,
+    cost: int | CostFunc,
+    burst: int | None,
+    exempt_when: ExemptFunc | None,
+    per_method: bool,
+    methods: list[str] | None,
+    scope: str | None,
+) -> LimitRule:
+    """Construct a :class:`LimitRule` from decorator arguments."""
+    return LimitRule(
+        name=name,
+        limit=limit_value,
+        key_func=key_func,
+        strategy=strategy,
+        cost=cost,
+        burst=burst,
+        exempt_when=exempt_when,
+        per_method=per_method,
+        methods=frozenset(m.upper() for m in methods) if methods else None,
+        scope=scope,
+    )
+
+
+def _build_endpoint_wrapper(
+    func: F,
+    rule: LimitRule,
+    resolve_limiter: Callable[[Request], Limiter],
+) -> F:
+    """Wrap ``func`` so ``rule`` is enforced by the limiter ``resolve_limiter`` returns.
+
+    Supports both ``def`` and ``async def`` endpoints and works whether the
+    limiter is bound at decoration time or resolved per request from the app.
+    """
+    request_param = _locate_request_param(func)
+
+    if inspect.iscoroutinefunction(func):
+
+        @wraps(func)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            request = _extract_request(args, kwargs, request_param)
+            limiter = resolve_limiter(request)
+            limiter.register_rule(rule)
+            blocked = await limiter.guard(request, [rule])
+            if blocked is not None:
+                return blocked
+            result = await func(*args, **kwargs)
+            limiter._inject_success(request, result)
+            return result
+
+        return cast(F, async_wrapper)
+
+    @wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        request = _extract_request(args, kwargs, request_param)
+        limiter = resolve_limiter(request)
+        limiter.register_rule(rule)
+        blocked = anyio.from_thread.run(limiter.guard, request, [rule])
+        if blocked is not None:
+            return blocked
+        result = func(*args, **kwargs)
+        limiter._inject_success(request, result)
+        return result
+
+    return cast(F, sync_wrapper)
+
+
+def _limiter_from_request(request: Request) -> Limiter:
+    """Return the limiter attached to the request's application."""
+    limiter = getattr(request.app.state, "limiter", None)
+    if not isinstance(limiter, Limiter):
+        raise ConfigurationError(
+            "No limiter is attached to the application. Call limiter.attach(app) "
+            "before using the module-level limit() decorator."
+        )
+    return limiter
+
+
+def limit(
+    limit_value: LimitValue,
+    *,
+    key_func: KeyFunc | None = None,
+    strategy: str | None = None,
+    cost: int | CostFunc = 1,
+    burst: int | None = None,
+    exempt_when: ExemptFunc | None = None,
+    per_method: bool = False,
+    methods: list[str] | None = None,
+    scope: str | None = None,
+    name: str | None = None,
+) -> Callable[[F], F]:
+    """Decorate an endpoint without importing the limiter instance.
+
+    The limiter is resolved at request time from ``request.app.state.limiter``,
+    so router modules can apply limits without importing the app's ``Limiter``
+    (avoiding circular imports). It requires ``limiter.attach(app)`` and behaves
+    exactly like :meth:`Limiter.limit` otherwise.
+    """
+
+    def decorator(func: F) -> F:
+        rule = _build_rule(
+            name or f"{func.__module__}.{func.__qualname__}",
+            limit_value,
+            key_func=key_func,
+            strategy=strategy,
+            cost=cost,
+            burst=burst,
+            exempt_when=exempt_when,
+            per_method=per_method,
+            methods=methods,
+            scope=scope,
+        )
+        return _build_endpoint_wrapper(func, rule, _limiter_from_request)
+
+    return decorator

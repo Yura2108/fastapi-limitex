@@ -6,13 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-07-26
+## [1.1.0] - 2026-07-26
+
+### Added
+
+- Module-level `limit(...)` decorator that resolves the limiter from
+  `request.app.state.limiter` at request time. Endpoints in `APIRouter` modules
+  can now be rate limited without importing the `Limiter` instance, which avoids
+  circular imports between the app and its router modules.
+
+## [1.0.0] - 2026-07-26
 
 ### Added
 
 - Initial release.
 - Decorator API (`@limiter.limit("5/minute")`) and dependency API
-  (`Depends(RateLimiter("5/minute"))`).
+  (`Depends(RateLimiter("5/minute"))`), both compatible with `APIRouter`.
 - Pluggable async storage backends: in-memory (default), Redis, Memcached and
   SQLite, installed via optional extras.
 - Strategies: fixed window (default), sliding window, moving window and token
@@ -26,5 +35,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - WebSocket rate limiting.
 - Fully typed (`py.typed`), checked with mypy in strict mode.
 
-[Unreleased]: https://github.com/Yura2108/fastapi-limitex/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Yura2108/fastapi-limitex/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Yura2108/fastapi-limitex/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Yura2108/fastapi-limitex/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/Yura2108/fastapi-limitex/releases/tag/v1.0.0

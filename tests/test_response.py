@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from starlette.responses import JSONResponse, Response
 from starlette.testclient import TestClient
 
-from fastapi_limiterx import HeaderConfig, Limiter, RateLimitContext
+from fastapi_limitex import HeaderConfig, Limiter, RateLimitContext
 
 
 def make_app(limiter: Limiter) -> TestClient:

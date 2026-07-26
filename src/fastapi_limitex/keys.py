@@ -6,8 +6,8 @@ from typing import Literal
 
 from starlette.requests import Request
 
-from fastapi_limiterx.errors import MissingIdentityError
-from fastapi_limiterx.types import KeyFunc
+from fastapi_limitex.errors import MissingIdentityError
+from fastapi_limitex.types import KeyFunc
 
 OnMissing = Literal["ip", "anonymous", "error"]
 
@@ -65,7 +65,7 @@ def user_key(
         on_missing: What to do when no identity is found. ``"ip"`` falls back to
             the client IP, ``"anonymous"`` shares one bucket across all
             anonymous callers, and ``"error"`` raises
-            :class:`~fastapi_limiterx.errors.MissingIdentityError`.
+            :class:`~fastapi_limitex.errors.MissingIdentityError`.
         prefix: A namespace prepended to the identity.
     """
 

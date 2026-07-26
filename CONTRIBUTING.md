@@ -43,15 +43,15 @@ To format your code, run `uv run ruff format .`.
 ## Adding a storage backend
 
 Implement the async primitives defined by
-`fastapi_limiterx.backends.base.BaseStorage`. Counter primitives power the fixed
+`fastapi_limitex.backends.base.BaseStorage`. Counter primitives power the fixed
 and sliding window strategies, the log primitives power the moving window
 strategy, and `take_token` powers the token bucket strategy. If your backend
 cannot support an operation, raise `UnsupportedOperationError` from it.
 
 ## Adding a strategy
 
-Subclass `fastapi_limiterx.strategies.base.RateLimitStrategy`, implement `hit`
-and `peek`, and register the class in `fastapi_limiterx/strategies/__init__.py`.
+Subclass `fastapi_limitex.strategies.base.RateLimitStrategy`, implement `hit`
+and `peek`, and register the class in `fastapi_limitex/strategies/__init__.py`.
 
 ## Releasing (maintainers)
 
@@ -67,7 +67,7 @@ One-time setup:
 
 To cut a release:
 
-1. Bump the version in `pyproject.toml` and `fastapi_limiterx/__init__.py`.
+1. Bump the version in `pyproject.toml` and `fastapi_limitex/__init__.py`.
 2. Update `CHANGELOG.md`.
 3. Create a GitHub release with a `vX.Y.Z` tag. The `publish.yml` workflow builds
    the distributions and uploads them to PyPI.

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from fastapi_limiterx.strategies.base import WindowStats
-from fastapi_limiterx.types import RateLimitContext
+from fastapi_limitex.strategies.base import WindowStats
+from fastapi_limitex.types import RateLimitContext
 
 
 @dataclass

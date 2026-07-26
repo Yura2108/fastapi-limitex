@@ -4,8 +4,8 @@ import hashlib
 import math
 from typing import TYPE_CHECKING, Any
 
-from fastapi_limiterx.backends.base import BaseStorage, TokenBucketState, now
-from fastapi_limiterx.errors import BackendNotInstalledError, UnsupportedOperationError
+from fastapi_limitex.backends.base import BaseStorage, TokenBucketState, now
+from fastapi_limitex.errors import BackendNotInstalledError, UnsupportedOperationError
 
 if TYPE_CHECKING:
     import aiomcache
@@ -32,7 +32,7 @@ class MemcachedStorage(BaseStorage):
         port: int = 11211,
         *,
         client: aiomcache.Client | None = None,
-        prefix: str = "limiterx",
+        prefix: str = "limitex",
     ) -> None:
         self._host = host
         self._port = port

@@ -3,9 +3,9 @@ from __future__ import annotations
 import math
 from typing import ClassVar
 
-from fastapi_limiterx.backends.base import now
-from fastapi_limiterx.rate import RateLimitItem
-from fastapi_limiterx.strategies.base import HitResult, RateLimitStrategy, WindowStats
+from fastapi_limitex.backends.base import now
+from fastapi_limitex.rate import RateLimitItem
+from fastapi_limitex.strategies.base import HitResult, RateLimitStrategy, WindowStats
 
 
 class TokenBucketStrategy(RateLimitStrategy):

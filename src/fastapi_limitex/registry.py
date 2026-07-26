@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 
 from starlette.requests import Request
 
-from fastapi_limiterx.rate import RateLimitItem, StaticLimit, parse_many
-from fastapi_limiterx.types import CostFunc, ExemptFunc, KeyFunc
+from fastapi_limitex.rate import RateLimitItem, StaticLimit, parse_many
+from fastapi_limitex.types import CostFunc, ExemptFunc, KeyFunc
 
 LimitValue = StaticLimit | Callable[[Request], str]
 

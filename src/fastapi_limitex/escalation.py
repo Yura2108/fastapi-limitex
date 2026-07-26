@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from fastapi_limiterx.backends.base import BaseStorage
-from fastapi_limiterx.errors import ConfigurationError
-from fastapi_limiterx.rate import RateLimitItem, parse
+from fastapi_limitex.backends.base import BaseStorage
+from fastapi_limitex.errors import ConfigurationError
+from fastapi_limitex.rate import RateLimitItem, parse
 
 
 @dataclass

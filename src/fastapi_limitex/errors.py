@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fastapi_limiterx.rate import RateLimitItem
+    from fastapi_limitex.rate import RateLimitItem
 
 
 class FastAPILimiterError(Exception):

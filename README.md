@@ -17,7 +17,7 @@ limits and fully customizable responses.
 
 ```python
 from fastapi import FastAPI, Request
-from fastapi_limiterx import Limiter
+from fastapi_limitex import Limiter
 
 app = FastAPI()
 limiter = Limiter()
@@ -38,6 +38,7 @@ async def ping(request: Request) -> dict[str, str]:
 - [Installation](#installation)
 - [Quickstart](#quickstart)
 - [Two ways to apply a limit](#two-ways-to-apply-a-limit)
+- [Using APIRouter and avoiding circular imports](#using-apirouter-and-avoiding-circular-imports)
 - [Storage backends](#storage-backends)
 - [Algorithms](#algorithms)
 - [Key strategies](#key-strategies)
@@ -93,7 +94,7 @@ uv add "fastapi-limitex[redis]"
 
 ```python
 from fastapi import FastAPI, Request
-from fastapi_limiterx import Limiter
+from fastapi_limitex import Limiter
 
 app = FastAPI()
 limiter = Limiter()  # in-memory, fixed window, per-IP
@@ -143,7 +144,7 @@ apply them to whole routers:
 
 ```python
 from fastapi import Depends
-from fastapi_limiterx import RateLimiter
+from fastapi_limitex import RateLimiter
 
 
 @app.get("/report", dependencies=[Depends(RateLimiter("2/#minute"))])
@@ -169,6 +170,127 @@ The dependency API requires `limiter.attach(app)` (so the exception handler is
 registered), or you can bind a limiter explicitly with
 `RateLimiter("2/minute", limiter=limiter)`.
 
+## Using APIRouter and avoiding circular imports
+
+Everything works with `APIRouter`. Put the router decorator on top and the
+limit decorator directly below it:
+
+```python
+from fastapi import APIRouter, Request
+from fastapi_limitex import limit
+
+router = APIRouter(prefix="/api")
+
+
+@router.get("/items")
+@limit("5/minute")
+async def items(request: Request) -> list[str]:
+    return ["a", "b"]
+```
+
+In a real project the app and the limiter live in `main.py`, while routers live
+in their own modules. Importing the limiter from `main.py` into a router would
+create a **circular import** (`main` imports the router, the router imports
+`main`). There are three ways to avoid it.
+
+### Option 1: the module-level `limit` decorator (no import of the limiter)
+
+`limit(...)` resolves the limiter from `request.app.state.limiter` at request
+time, so a router never imports the limiter instance at all:
+
+```python
+# app/routers/items.py
+from fastapi import APIRouter, Request
+from fastapi_limitex import limit
+
+router = APIRouter()
+
+
+@router.get("/items")
+@limit("5/minute")
+async def items(request: Request) -> list[str]:
+    return ["a", "b"]
+```
+
+```python
+# app/main.py
+from fastapi import FastAPI
+from fastapi_limitex import Limiter
+
+from app.routers import items
+
+app = FastAPI()
+limiter = Limiter()
+limiter.attach(app)              # makes the limiter discoverable to @limit
+app.include_router(items.router)
+```
+
+### Option 2: the dependency API (also no import of the limiter)
+
+`RateLimiter(...)` resolves the limiter the same way, so it is equally
+import-safe:
+
+```python
+# app/routers/report.py
+from fastapi import APIRouter, Depends
+from fastapi_limitex import RateLimiter
+
+router = APIRouter()
+
+
+@router.get("/report", dependencies=[Depends(RateLimiter("2/minute"))])
+async def report() -> dict[str, str]:
+    return {"status": "ok"}
+```
+
+You can also rate limit an entire router:
+
+```python
+router = APIRouter(dependencies=[Depends(RateLimiter("100/minute"))])
+```
+
+### Option 3: keep the limiter in its own module
+
+If you prefer the bound `@limiter.limit`, define the limiter in a small leaf
+module that imports nothing else from your app, then import it anywhere:
+
+```python
+# app/limiter.py
+from fastapi_limitex import Limiter
+
+limiter = Limiter()
+```
+
+```python
+# app/routers/items.py
+from fastapi import APIRouter, Request
+
+from app.limiter import limiter
+
+router = APIRouter()
+
+
+@router.get("/items")
+@limiter.limit("5/minute")
+async def items(request: Request) -> list[str]:
+    return ["a", "b"]
+```
+
+```python
+# app/main.py
+from fastapi import FastAPI
+
+from app.limiter import limiter
+from app.routers import items
+
+app = FastAPI()
+limiter.attach(app)
+app.include_router(items.router)
+```
+
+> Whichever option you choose, put `@router.get(...)` **above** the limit
+> decorator so FastAPI registers the wrapped endpoint.
+
 ## Storage backends
 
 The default backend is **in-memory** and requires no extra dependencies. All
@@ -180,7 +302,7 @@ State lives in the process and is bounded by entry count and TTL. Great for a
 single process, development and tests.
 
 ```python
-from fastapi_limiterx import Limiter, MemoryStorage
+from fastapi_limitex import Limiter, MemoryStorage
 
 limiter = Limiter(storage=MemoryStorage(max_entries=50_000))
 ```
@@ -193,7 +315,7 @@ limiter = Limiter(storage=MemoryStorage(max_entries=50_000))
 ### Redis
 
 ```python
-from fastapi_limiterx import Limiter, RedisStorage
+from fastapi_limitex import Limiter, RedisStorage
 
 limiter = Limiter(storage=RedisStorage("redis://localhost:6379/0"))
 # or reuse an existing client:
@@ -203,13 +325,13 @@ limiter = Limiter(storage=RedisStorage("redis://localhost:6379/0"))
 ```
 
 Uses atomic Lua scripts, so counts are correct across many workers and hosts.
-Keys are namespaced with a configurable `prefix` (default `"limiterx"`) and
+Keys are namespaced with a configurable `prefix` (default `"limitex"`) and
 expire automatically via Redis TTLs.
 
 ### Memcached
 
 ```python
-from fastapi_limiterx import Limiter, MemcachedStorage
+from fastapi_limitex import Limiter, MemcachedStorage
 
 limiter = Limiter(storage=MemcachedStorage("localhost", 11211))
 ```
@@ -221,9 +343,9 @@ structures); use one of the others.
 ### SQLite
 
 ```python
-from fastapi_limiterx import Limiter, SQLiteStorage
+from fastapi_limitex import Limiter, SQLiteStorage
 
-limiter = Limiter(storage=SQLiteStorage("limiterx.sqlite3"))
+limiter = Limiter(storage=SQLiteStorage("limitex.sqlite3"))
 # in-memory database: SQLiteStorage(":memory:")
 ```
 
@@ -286,7 +408,7 @@ default because they can be spoofed.
 Behind a proxy you control, opt in explicitly:
 
 ```python
-from fastapi_limiterx import Limiter, get_ip_from_header
+from fastapi_limitex import Limiter, get_ip_from_header
 
 limiter = Limiter(key_func=get_ip_from_header("X-Forwarded-For"))
 ```
@@ -294,7 +416,7 @@ limiter = Limiter(key_func=get_ip_from_header("X-Forwarded-For"))
 ### Per-user
 
 ```python
-from fastapi_limiterx import Limiter, user_key
+from fastapi_limitex import Limiter, user_key
 
 
 def current_user(request: Request) -> str | None:
@@ -325,7 +447,7 @@ async def profile(request: Request) -> dict[str, str]:
 ### Global (one bucket for everyone)
 
 ```python
-from fastapi_limiterx import global_key
+from fastapi_limitex import global_key
 
 
 @app.get("/global")
@@ -357,7 +479,7 @@ stricter `penalty_limit` is enforced (or the client is blocked entirely when
 `penalty_limit` is `None`).
 
 ```python
-from fastapi_limiterx import EscalationPolicy, Limiter
+from fastapi_limitex import EscalationPolicy, Limiter
 
 limiter = Limiter(
     escalation=EscalationPolicy(
@@ -373,7 +495,7 @@ Hook your own logging or alerting with `on_breach`, which is called on every
 block (including bans):
 
 ```python
-from fastapi_limiterx import RateLimitContext
+from fastapi_limitex import RateLimitContext
 
 
 async def report_breach(ctx: RateLimitContext) -> None:
@@ -424,7 +546,7 @@ By default a blocked request receives a `429` JSON body plus `Retry-After` and
 
 ```python
 from starlette.responses import JSONResponse, Response
-from fastapi_limiterx import Limiter, RateLimitContext
+from fastapi_limitex import Limiter, RateLimitContext
 
 
 def build_response(request: Request, ctx: RateLimitContext) -> Response:
@@ -440,7 +562,7 @@ limiter = Limiter(response_builder=build_response)
 Configure or rename the headers:
 
 ```python
-from fastapi_limiterx import HeaderConfig, Limiter
+from fastapi_limitex import HeaderConfig, Limiter
 
 limiter = Limiter(
     headers=HeaderConfig(
@@ -460,7 +582,7 @@ Skip limiting for specific IPs, resolved keys, or arbitrary predicates. All
 collections are editable at runtime.
 
 ```python
-from fastapi_limiterx import Exemptions, Limiter
+from fastapi_limitex import Exemptions, Limiter
 
 exemptions = Exemptions(
     ips={"127.0.0.1"},
@@ -504,7 +626,7 @@ Rate limit messages inside a WebSocket loop:
 
 ```python
 from fastapi import WebSocket
-from fastapi_limiterx import RateLimitExceeded, WebSocketRateLimiter
+from fastapi_limitex import RateLimitExceeded, WebSocketRateLimiter
 
 ws_limiter = WebSocketRateLimiter("5/minute", limiter=limiter)
 

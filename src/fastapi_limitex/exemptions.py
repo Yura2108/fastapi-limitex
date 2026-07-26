@@ -5,8 +5,8 @@ from inspect import isawaitable
 
 from starlette.requests import Request
 
-from fastapi_limiterx.keys import get_remote_address
-from fastapi_limiterx.types import ExemptFunc
+from fastapi_limitex.keys import get_remote_address
+from fastapi_limitex.types import ExemptFunc
 
 
 class Exemptions:

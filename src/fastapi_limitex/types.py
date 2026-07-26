@@ -8,8 +8,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 if TYPE_CHECKING:
-    from fastapi_limiterx.rate import RateLimitItem
-    from fastapi_limiterx.strategies.base import WindowStats
+    from fastapi_limitex.rate import RateLimitItem
+    from fastapi_limitex.strategies.base import WindowStats
 
 KeyFunc = Callable[[Request], str | Awaitable[str]]
 """A function that derives a rate limiting key from a request."""

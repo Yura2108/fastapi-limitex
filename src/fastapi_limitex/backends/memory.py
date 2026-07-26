@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 
-from fastapi_limiterx.backends.base import BaseStorage, TokenBucketState, now
+from fastapi_limitex.backends.base import BaseStorage, TokenBucketState, now
 
 
 class MemoryStorage(BaseStorage):

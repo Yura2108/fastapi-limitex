@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from fastapi_limiterx.backends.base import BaseStorage, now
+from fastapi_limitex.backends.base import BaseStorage, now
 
 
 async def test_incr_counts_and_expiry(backend: BaseStorage) -> None:

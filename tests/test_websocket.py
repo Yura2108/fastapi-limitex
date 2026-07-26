@@ -4,7 +4,7 @@ from fastapi import FastAPI, WebSocket
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from fastapi_limiterx import Limiter, RateLimitExceeded, WebSocketRateLimiter
+from fastapi_limitex import Limiter, RateLimitExceeded, WebSocketRateLimiter
 
 
 def test_websocket_rate_limit() -> None:

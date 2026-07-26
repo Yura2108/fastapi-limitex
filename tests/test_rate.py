@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from fastapi_limiterx.errors import ConfigurationError
-from fastapi_limiterx.rate import RateLimitItem, parse, parse_many
+from fastapi_limitex.errors import ConfigurationError
+from fastapi_limitex.rate import RateLimitItem, parse, parse_many
 
 
 @pytest.mark.parametrize(

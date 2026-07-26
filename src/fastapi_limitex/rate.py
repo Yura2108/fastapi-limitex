@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from fastapi_limiterx.errors import ConfigurationError
+from fastapi_limitex.errors import ConfigurationError
 
 _GRANULARITIES: dict[str, int] = {
     "second": 1,

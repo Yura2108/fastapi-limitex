@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from starlette.testclient import TestClient
 
-from fastapi_limiterx import Limiter
+from fastapi_limitex import Limiter
 
 
 def build(limiter: Limiter, limit: str, name: str) -> TestClient:

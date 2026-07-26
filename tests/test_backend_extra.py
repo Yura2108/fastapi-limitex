@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from fastapi_limiterx.backends.memory import MemoryStorage
-from fastapi_limiterx.backends.redis import RedisStorage
+from fastapi_limitex.backends.memory import MemoryStorage
+from fastapi_limitex.backends.redis import RedisStorage
 
 
 def test_memory_rejects_bad_max_entries() -> None:

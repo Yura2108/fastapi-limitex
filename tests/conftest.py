@@ -6,10 +6,10 @@ import fakeredis.aioredis
 import pytest
 import pytest_asyncio
 
-from fastapi_limiterx.backends.base import BaseStorage
-from fastapi_limiterx.backends.memory import MemoryStorage
-from fastapi_limiterx.backends.redis import RedisStorage
-from fastapi_limiterx.backends.sqlite import SQLiteStorage
+from fastapi_limitex.backends.base import BaseStorage
+from fastapi_limitex.backends.memory import MemoryStorage
+from fastapi_limitex.backends.redis import RedisStorage
+from fastapi_limitex.backends.sqlite import SQLiteStorage
 
 
 @pytest_asyncio.fixture(params=["memory", "sqlite", "redis"])

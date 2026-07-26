@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import Depends, FastAPI, Request
 
-from fastapi_limiterx import (
+from fastapi_limitex import (
     EscalationPolicy,
     Exemptions,
     Limiter,

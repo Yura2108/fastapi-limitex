@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from fastapi_limiterx.backends.base import BaseStorage, TokenBucketState, now
-from fastapi_limiterx.errors import BackendNotInstalledError
+from fastapi_limitex.backends.base import BaseStorage, TokenBucketState, now
+from fastapi_limitex.errors import BackendNotInstalledError
 
 if TYPE_CHECKING:
     import aiosqlite
@@ -30,7 +30,7 @@ class SQLiteStorage(BaseStorage):
             in-process database.
     """
 
-    def __init__(self, path: str = "limiterx.sqlite3") -> None:
+    def __init__(self, path: str = "limitex.sqlite3") -> None:
         self.path = path
         self._db: aiosqlite.Connection | None = None
         self._lock = asyncio.Lock()

@@ -4,9 +4,9 @@ from typing import Any, cast
 
 import pytest
 
-from fastapi_limiterx.backends.base import now
-from fastapi_limiterx.backends.memcached import MemcachedStorage
-from fastapi_limiterx.errors import UnsupportedOperationError
+from fastapi_limitex.backends.base import now
+from fastapi_limitex.backends.memcached import MemcachedStorage
+from fastapi_limitex.errors import UnsupportedOperationError
 
 
 class FakeMemcached:

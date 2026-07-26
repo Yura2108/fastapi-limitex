@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from fastapi_limiterx import Exemptions, Limiter
+from fastapi_limitex import Exemptions, Limiter
 
 
 def test_application_limit_shared_across_paths() -> None:
