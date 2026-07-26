@@ -1,0 +1,144 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastapi-limitex"
+version = "0.1.0"
+description = "Flexible, backend-agnostic rate limiting for FastAPI and Starlette with decorator and dependency APIs."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Yura2108" }]
+keywords = [
+    "fastapi",
+    "starlette",
+    "rate-limit",
+    "rate-limiting",
+    "ratelimit",
+    "throttling",
+    "redis",
+    "memcached",
+    "sqlite",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Internet :: WWW/HTTP",
+    "Typing :: Typed",
+]
+dependencies = [
+    "starlette>=0.37",
+    "anyio>=4.0",
+    "typing-extensions>=4.7; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+redis = ["redis>=4.2"]
+memcached = ["aiomcache>=0.8"]
+sqlite = ["aiosqlite>=0.19"]
+all = ["redis>=4.2", "aiomcache>=0.8", "aiosqlite>=0.19"]
+
+[project.urls]
+Homepage = "https://github.com/Yura2108/fastapi-limitex"
+Documentation = "https://github.com/Yura2108/fastapi-limitex#readme"
+Repository = "https://github.com/Yura2108/fastapi-limitex"
+Issues = "https://github.com/Yura2108/fastapi-limitex/issues"
+Changelog = "https://github.com/Yura2108/fastapi-limitex/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.110",
+    "httpx>=0.27",
+    "httpx2>=2.9",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "coverage[toml]>=7.4",
+    "fakeredis[lua]>=2.21",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "redis>=4.2",
+    "aiomcache>=0.8",
+    "aiosqlite>=0.19",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fastapi_limiterx"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/fastapi_limiterx", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "C4",
+    "SIM",
+    "TID",
+    "RUF",
+]
+ignore = ["N818"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["fastapi_limiterx"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["aiomcache.*", "fakeredis.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["fastapi_limiterx"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "\\.\\.\\.",
+]
